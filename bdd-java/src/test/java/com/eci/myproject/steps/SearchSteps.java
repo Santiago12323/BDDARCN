@@ -1,0 +1,71 @@
+package com.eci.myproject.steps;
+
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
+import java.net.URL;
+import java.time.Duration;
+
+import static org.junit.Assert.assertTrue;
+
+public class SearchSteps {
+
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    @Before
+    public void setUp() throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+
+        driver = new RemoteWebDriver(
+                new URL("http://localhost:4444/wd/hub"),
+                options
+        );
+
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+    }
+
+    @Given("I am on the Google search page")
+    public void i_am_on_the_google_search_page() {
+        driver.get("https://www.google.com");
+    }
+
+    @When("I search for {string}")
+    public void i_search_for(String term) {
+
+        WebElement searchBox = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(By.name("q"))
+        );
+
+        searchBox.sendKeys(term);
+        searchBox.submit();
+    }
+
+    @Then("I should see {string} in the results")
+    public void i_should_see_in_the_results(String term) {
+
+        wait.until(ExpectedConditions.titleContains(term));
+
+        assertTrue(driver.getPageSource().toLowerCase().contains(term.toLowerCase()));
+    }
+
+    @After
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}
